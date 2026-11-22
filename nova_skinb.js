@@ -2848,7 +2848,16 @@
       }
       var was = parseFloat(node.getAttribute('data-nova-lift')) || 0;
       var natural = node.getBoundingClientRect().top + was;
-      var lift = Math.max(0, Math.min(Math.round(natural), 400));
+      // межа, по якій Lampa обрізає вміст: вище неї постер однаково не видно
+      var clip = 0;
+      for (var up = node.parentNode; up && up.nodeType === 1 && up !== document.body; up = up.parentNode) {
+        var flow = window.getComputedStyle(up).overflowY;
+        if (flow === 'hidden' || flow === 'auto' || flow === 'scroll') {
+          clip = up.getBoundingClientRect().top;
+          break;
+        }
+      }
+      var lift = Math.max(0, Math.min(Math.round(natural - clip), 400));
       if (Math.abs(lift - was) < 2) return;
       node.style.marginTop = '-' + lift + 'px';
       node.style.paddingTop = lift + 'px';
@@ -4845,7 +4854,7 @@
   var BLEED_CSS = [
     'body.nova-skin-bleed .nova-skin-root .nova-hero{-webkit-box-sizing:border-box;box-sizing:border-box;width:100vw;max-width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding-left:calc(50vw - 50%);padding-right:calc(50vw - 50%);-webkit-border-radius:0;border-radius:0;background:transparent;min-height:26em}',
     'body.nova-skin-bleed .nova-skin-root .nova-hero--compact{min-height:0}',
-    'body.nova-skin-bleed .nova-skin-root .nova-hero__bg,body.nova-skin-bleed .nova-skin-root .nova-hero__shade{-webkit-mask-image:-webkit-linear-gradient(top,#000 0,#000 72%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 72%,transparent 100%)}',
+    'body.nova-skin-bleed .nova-skin-root .nova-hero__bg,body.nova-skin-bleed .nova-skin-root .nova-hero__shade{-webkit-mask-image:-webkit-linear-gradient(top,transparent 0,#000 16%,#000 72%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 16%,#000 72%,transparent 100%)}',
     'body.nova-skin-bleed .nova-skin-root .nova-hero__progress{left:calc(50vw - 50%);right:calc(50vw - 50%);bottom:.6em;width:auto;-webkit-border-radius:.3em;border-radius:.3em}',
     'body.nova-skin-bleed .nova-skin-root .nova-hero__body{padding-left:0;padding-right:0}'
   ].join('');
