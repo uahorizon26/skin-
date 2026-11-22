@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовті шкали прогресу (#FFC107); джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -120,6 +120,16 @@
     } catch (e) {}
   }
 
+  function heroBleed() { return get('nova_skin_hero_bleed', true) !== false; }
+
+  function applyHeroBleed() {
+    try {
+      var body = $('body');
+      if (heroBleed()) body.addClass('nova-skin-bleed');
+      else body.removeClass('nova-skin-bleed');
+    } catch (e) {}
+  }
+
   function edgeFade() { return get('nova_skin_fade', false) === true; }
 
   function applyEdgeFade() {
@@ -196,6 +206,8 @@
     nova_skin_set_logo_descr: { ru: 'Показывать логотип фильма в шапке, если он есть', uk: 'Показувати логотип фільму в шапці, якщо він є', en: 'Show the movie logo in the header when available' },
     nova_skin_set_full: { ru: 'Во всю ширину экрана', uk: 'На всю ширину екрана', en: 'Full width' },
     nova_skin_set_full_descr: { ru: 'Скрыть маленький постер и описание слева', uk: 'Сховати маленький постер і опис ліворуч', en: 'Hide the small poster and overview on the left' },
+    nova_skin_set_bleed: { ru: 'Шапка на весь экран', uk: 'Шапка на весь екран', en: 'Full-width hero' },
+    nova_skin_set_bleed_descr: { ru: 'Постер шапки во всю ширину экрана, без рамки-окна', uk: 'Постер шапки на всю ширину екрана, без рамки-вікна', en: 'Hero poster spans the full screen width, no framed window' },
     nova_skin_set_fade: { ru: 'Размытые края постера', uk: 'Розмиті краї постера', en: 'Faded poster edges' },
     nova_skin_set_fade_descr: { ru: 'Растворять постер вверху по краям со всех сторон', uk: 'Розчиняти постер угорі по краях з усіх боків', en: 'Fade the header artwork out on every side' },
     nova_skin_set_probe: { ru: 'Проверять источники в фоне', uk: 'Перевіряти джерела у фоні', en: 'Check sources in background' },
@@ -488,7 +500,7 @@
     if (document.getElementById('nova-skin-css')) return;
     var style = document.createElement('style');
     style.id = 'nova-skin-css';
-    style.textContent = SKIN_CSS + EXTRA_CSS + CARD_CSS + FOCUS_CSS + FULL_CSS + FADE_CSS + MARK_CSS + BADGE_CSS + LOGO_CSS + LOGO_HOLD + ACCENT_CSS;
+    style.textContent = SKIN_CSS + EXTRA_CSS + CARD_CSS + FOCUS_CSS + FULL_CSS + FADE_CSS + MARK_CSS + BADGE_CSS + LOGO_CSS + LOGO_HOLD + ACCENT_CSS + BLEED_CSS;
     (document.body || document.head).appendChild(style);
   }
 
@@ -4481,6 +4493,16 @@
 
       Lampa.SettingsApi.addParam({
         component: 'nova_skin',
+        param: { name: 'nova_skin_hero_bleed', type: 'trigger', default: true },
+        field: {
+          name: label('nova_skin_set_bleed'),
+          description: label('nova_skin_set_bleed_descr')
+        },
+        onChange: function () { applyHeroBleed(); }
+      });
+
+      Lampa.SettingsApi.addParam({
+        component: 'nova_skin',
         param: { name: 'nova_skin_fade', type: 'trigger', default: false },
         field: {
           name: label('nova_skin_set_fade'),
@@ -4616,6 +4638,7 @@
     applyFocusStyle();
     applyFullScreen();
     applyEdgeFade();
+    applyHeroBleed();
     handWatch();
     hookFilter();
     hookScroll();
@@ -4775,6 +4798,15 @@
   var ACCENT = '#FFC107';
   var ACCENT_CSS = [
     '.nova-hero__progress .time-line>div,.nova-skin-root .nova-hero__progress .time-line>div,.nova-card__line .time-line>div,.nova-skin-root .nova-card__line>.time-line>div,.nova-skin-root .nova-card__line--body>.time-line>div,.nova-loading__bar>div{background:' + ACCENT + '}'
+  ].join('');
+
+  // Шапка на всю ширину екрана (вимикається в налаштуваннях)
+  var BLEED_CSS = [
+    'body.nova-skin-bleed .nova-skin-root .nova-hero{-webkit-box-sizing:border-box;box-sizing:border-box;width:100vw;max-width:100vw;margin-left:calc(50% - 50vw);margin-right:calc(50% - 50vw);padding-left:calc(50vw - 50%);padding-right:calc(50vw - 50%);-webkit-border-radius:0;border-radius:0;background:transparent;min-height:26em}',
+    'body.nova-skin-bleed .nova-skin-root .nova-hero--compact{min-height:0}',
+    'body.nova-skin-bleed .nova-skin-root .nova-hero__bg,body.nova-skin-bleed .nova-skin-root .nova-hero__shade{-webkit-mask-image:-webkit-linear-gradient(top,#000 0,#000 72%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 72%,transparent 100%)}',
+    'body.nova-skin-bleed .nova-skin-root .nova-hero__progress{left:calc(50vw - 50%);right:calc(50vw - 50%);bottom:.6em;width:auto;-webkit-border-radius:.3em;border-radius:.3em}',
+    'body.nova-skin-bleed .nova-skin-root .nova-hero__body{padding-left:0;padding-right:0}'
   ].join('');
 
   var FADE_CSS = [
