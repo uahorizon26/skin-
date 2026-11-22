@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовтий акцент (#FFC107); таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); джерела відсортовано за якістю; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -211,7 +211,7 @@
     nova_skin_set_focus: { ru: 'Выделение', uk: 'Виділення', en: 'Highlight style' },
     nova_skin_set_focus_descr: { ru: 'Чем подсвечивать выбранную кнопку, серию или озвучку', uk: 'Чим підсвічувати вибрану кнопку, серію або озвучення', en: 'How the focused button, episode or voice is highlighted' },
     nova_skin_set_focus_ring: { ru: 'Ободок', uk: 'Обідок', en: 'Outline' },
-    nova_skin_set_focus_fill: { ru: 'Жёлтая заливка', uk: 'Жовта заливка', en: 'Yellow fill' }
+    nova_skin_set_focus_fill: { ru: 'Белая заливка', uk: 'Біла заливка', en: 'White fill' }
   };
 
   try {
@@ -3138,6 +3138,17 @@
       if (sourceActive(item, key, state, graded)) visible.push(item);
       else hidden.push(item);
     });
+    var byQuality = function (list) {
+      return list.map(function (item, seat) {
+        var key = item.source || item.title;
+        var label = knownQuality(key) || splitSourceName(item.title).badge;
+        return { item: item, seat: seat, q: QUALITY_RANK[label] || 0 };
+      }).sort(function (a, b) {
+        return (b.q - a.q) || (a.seat - b.seat);
+      }).map(function (entry) { return entry.item; });
+    };
+    visible = byQuality(visible);
+    hidden = byQuality(hidden);
     if (ui_all_sources) visible = visible.concat(hidden);
 
     var row = $('<div class="nova-drop"></div>');
@@ -4745,24 +4756,10 @@
 
   var FADE_MASK = '-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 10%,#000 90%,transparent 100%),linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%);mask-image:linear-gradient(90deg,transparent 0,#000 10%,#000 90%,transparent 100%),linear-gradient(180deg,transparent 0,#000 14%,#000 86%,transparent 100%);-webkit-mask-composite:source-in;mask-composite:intersect;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%';
 
-  // Жовтий акцент: перекриває білий колір виділення, прогресу й активних елементів
+  // Жовтий акцент: лише шкали прогресу (решта виділень залишається білою)
   var ACCENT = '#FFC107';
   var ACCENT_CSS = [
-    '.nova-btn.focus,.nova-chip.focus,.nova-card.focus,.nova-group.focus{background:' + ACCENT + ';color:#000}',
-    '.nova-btn--main{background:rgba(255,193,7,.88);color:#000}',
-    '.nova-btn--main.focus{background:' + ACCENT + '}',
-    '.nova-chip--active,.nova-group--open{background:rgba(255,193,7,.18);-webkit-box-shadow:inset 0 0 0 .1em rgba(255,193,7,.65);box-shadow:inset 0 0 0 .1em rgba(255,193,7,.65)}',
-    '.nova-hero__progress .time-line>div,.nova-skin-root .nova-hero__progress .time-line>div,.nova-card__line .time-line>div,.nova-skin-root .nova-card__line>.time-line>div,.nova-skin-root .nova-card__line--body>.time-line>div,.nova-loading__bar>div{background:' + ACCENT + '}',
-    '.nova__list--grid .nova-card.focus,.nova-skin-root .nova__list--grid .nova-card.focus{background:none;color:inherit}',
-    '.nova__list--grid .nova-card.focus .nova-card__thumb{-webkit-box-shadow:0 0 0 .2em ' + ACCENT + ';box-shadow:0 0 0 .2em ' + ACCENT + '}',
-    'body.nova-focus-ring .nova-btn.focus,body.nova-focus-ring .nova-chip.focus,body.nova-focus-ring .nova-card.focus,body.nova-focus-ring .nova-group.focus{background:rgba(255,193,7,.16)!important;color:#fff!important;-webkit-box-shadow:inset 0 0 0 .12em ' + ACCENT + '!important;box-shadow:inset 0 0 0 .12em ' + ACCENT + '!important}',
-    'body.nova-focus-ring .nova-btn--main{background:rgba(255,193,7,.16);color:#fff;-webkit-box-shadow:inset 0 0 0 .1em rgba(255,193,7,.6);box-shadow:inset 0 0 0 .1em rgba(255,193,7,.6)}',
-    'body.nova-focus-ring .nova-chip.focus .nova-chip__badge{background:rgba(255,193,7,.25)!important;color:#fff!important}',
-    'body.nova-focus-ring .nova-card.focus .nova-card__line--body,body.nova-focus-ring .nova-card--slim.focus .nova-card__line{background:rgba(255,193,7,.22)!important}',
-    'body.nova-focus-ring .nova-card.focus .nova-card__line--body .time-line>div,body.nova-focus-ring .nova-card--slim.focus .nova-card__line .time-line>div{background:' + ACCENT + '!important}',
-    'body.nova-focus-ring .nova__list--grid .nova-card.focus{background:none!important;color:inherit!important;-webkit-box-shadow:none!important;box-shadow:none!important}',
-    'body.nova-focus-ring .nova__list--grid .nova-card.focus .nova-card__thumb{-webkit-box-shadow:0 0 0 .12em ' + ACCENT + '!important;box-shadow:0 0 0 .12em ' + ACCENT + '!important}',
-    'body.nova-focus-ring .nova-chip--active.focus,body.nova-focus-ring .nova-group--open.focus{-webkit-box-shadow:inset 0 0 0 .12em ' + ACCENT + '!important;box-shadow:inset 0 0 0 .12em ' + ACCENT + '!important}'
+    '.nova-hero__progress .time-line>div,.nova-skin-root .nova-hero__progress .time-line>div,.nova-card__line .time-line>div,.nova-skin-root .nova-card__line>.time-line>div,.nova-skin-root .nova-card__line--body>.time-line>div,.nova-loading__bar>div{background:' + ACCENT + '}'
   ].join('');
 
   var FADE_CSS = [
