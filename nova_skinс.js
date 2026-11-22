@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран без темної смуги; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -2834,6 +2834,52 @@
     ui.hero.find('.nova-hero__season').hide();
   }
 
+  // Постер шапки окремим шаром на весь екран (за межами області прокрутки Lampa),
+  // щоб він ішов аж до верхнього краю, під верхню панель.
+  var backdrop = null;
+  var backdrop_timer = null;
+
+  function backdropDrop() {
+    clearInterval(backdrop_timer);
+    backdrop_timer = null;
+    try { if (backdrop) backdrop.remove(); } catch (e) {}
+    backdrop = null;
+    try { $('body').removeClass('nova-skin-backdrop'); } catch (e) {}
+  }
+
+  function backdropSync() {
+    try {
+      if (!heroBleed() || !ui.hero || !ui.hero.length || ui.hero.hasClass('nova-hero--compact') ||
+          !document.body.contains(ui.hero[0])) return backdropDrop();
+      var src = ui.hero.find('.nova-hero__bg img').attr('src') || '';
+      if (!src) return;
+      var bottom = Math.round(ui.hero[0].getBoundingClientRect().bottom);
+      if (bottom < 200) return;
+      if (!backdrop) {
+        // Шар стає прямо за фоном Lampa і з тим самим z-index: так він завжди
+        // лежить над фоном і під інтерфейсом, що б там не було.
+        var anchor = $('.background').first();
+        if (!anchor.length) return;
+        backdrop = $('<div class="nova-backdrop"></div>');
+        var layer = window.getComputedStyle(anchor[0]).zIndex;
+        backdrop.css('z-index', layer === 'auto' || layer === '' ? 'auto' : layer);
+        anchor.after(backdrop);
+      }
+      var height = Math.max(bottom, parseFloat(backdrop.attr('data-h')) || 0);
+      backdrop.attr('data-h', height);
+      backdrop.css({
+        height: height + 'px',
+        'background-image': 'linear-gradient(180deg,rgba(10,11,17,.5) 0%,rgba(10,11,17,0) 22%,rgba(10,11,17,.35) 62%,rgba(10,11,17,.92) 100%),url("' + src.replace(/"/g, '%22') + '")'
+      });
+      $('body').addClass('nova-skin-backdrop');
+      if (!backdrop_timer) {
+        backdrop_timer = setInterval(function () {
+          if (!inSkin() || !ui.hero || !document.body.contains(ui.hero[0])) backdropDrop();
+        }, 800);
+      }
+    } catch (e) {}
+  }
+
   // Піднімає постер шапки під верхню панель, прибираючи темну смугу над ним.
   function liftHero() {
     try {
@@ -2866,8 +2912,9 @@
   }
 
   function liftHeroLater() {
-    setTimeout(liftHero, 60);
-    setTimeout(liftHero, 500);
+    setTimeout(function () { liftHero(); backdropSync(); }, 60);
+    setTimeout(function () { liftHero(); backdropSync(); }, 500);
+    setTimeout(backdropSync, 1500);
   }
 
   function buildHero() {
@@ -4544,6 +4591,7 @@
           applyHeroBleed();
           try {
             var h = ui.hero && ui.hero[0];
+            if (!heroBleed()) backdropDrop();
             if (h && !heroBleed()) { h.style.marginTop = ''; h.style.paddingTop = ''; h.setAttribute('data-nova-lift', '0'); }
             else liftHeroLater();
           } catch (e) {}
@@ -4856,7 +4904,9 @@
     'body.nova-skin-bleed .nova-skin-root .nova-hero--compact{min-height:0}',
     'body.nova-skin-bleed .nova-skin-root .nova-hero__bg,body.nova-skin-bleed .nova-skin-root .nova-hero__shade{-webkit-mask-image:-webkit-linear-gradient(top,transparent 0,#000 16%,#000 72%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 16%,#000 72%,transparent 100%)}',
     'body.nova-skin-bleed .nova-skin-root .nova-hero__progress{left:calc(50vw - 50%);right:calc(50vw - 50%);bottom:.6em;width:auto;-webkit-border-radius:.3em;border-radius:.3em}',
-    'body.nova-skin-bleed .nova-skin-root .nova-hero__body{padding-left:0;padding-right:0}'
+    'body.nova-skin-bleed .nova-skin-root .nova-hero__body{padding-left:0;padding-right:0}',
+    '.nova-backdrop{position:fixed;top:0;left:0;width:100%;pointer-events:none;background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat;-webkit-mask-image:-webkit-linear-gradient(top,#000 0,#000 80%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 80%,transparent 100%)}',
+    'body.nova-skin-backdrop.nova-skin-bleed .nova-skin-root .nova-hero__bg,body.nova-skin-backdrop.nova-skin-bleed .nova-skin-root .nova-hero__shade{opacity:0}'
   ].join('');
 
   var FADE_CSS = [
