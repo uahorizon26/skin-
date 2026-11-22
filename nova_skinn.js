@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовті шкали прогресу (#FFC107); джерела відсортовано за якістю; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -286,16 +286,22 @@
   function shortQuality(value) {
     if (!value) return '';
     value = String(value);
-    var match = value.match(/(2160|1440|1080|720|576|480|360)\s*p?/i);
-    if (match) {
-      var num = parseInt(match[1], 10);
-      if (num >= 2160) return '4K';
-      if (num >= 1080) return 'FHD';
-      if (num >= 720) return 'HD';
+    // Роздільна здатність лише як "1080p" або "1920x1080": голі числа (сіди, розмір) не рахуємо.
+    var best = 0;
+    var re = /(?:^|[^\d])(2160|1440|1080|720|576|480|360)\s*[pр]\b|\d{3,4}\s*[x\u00d7]\s*(2160|1440|1080|720|576|480|360)\b/gi;
+    var match;
+    while ((match = re.exec(value))) {
+      var num = parseInt(match[1] || match[2], 10);
+      if (num > best) best = num;
+    }
+    if (best) {
+      if (best >= 2160) return '4K';
+      if (best >= 1080) return 'FHD';
+      if (best >= 720) return 'HD';
       return 'SD';
     }
-    if (/4k|uhd/i.test(value)) return '4K';
-    if (/fhd/i.test(value)) return 'FHD';
+    if (/\b(4k|uhd)\b/i.test(value)) return '4K';
+    if (/\bfhd\b/i.test(value)) return 'FHD';
     if (/\bhd\b/i.test(value)) return 'HD';
     return '';
   }
@@ -1921,6 +1927,15 @@
     return knownQuality(currentSourceKey()) || splitSourceName(sourceTitle()).badge || '';
   }
 
+  function folderQuality(origin) {
+    try {
+      return shortQuality(origin.find('.online-prestige__info').text() + ' ' +
+        origin.find('.online-prestige__title').text());
+    } catch (e) {
+      return '';
+    }
+  }
+
   function soonCard(origin) {
     var found = (origin.attr('style') || '').match(/opacity\s*:\s*([\d.]+)/);
     if (!found) return false;
@@ -2005,7 +2020,7 @@
         : (origin.find('.online-prestige__time').text().trim() ||
           (origin.hasClass('online-prestige--folder') ? '' : fallbackTime())),
       quality: soon ? '' : (origin.find('.online-prestige__quality').text().trim() ||
-        (origin.hasClass('online-prestige--folder') ? '' : fallbackQuality(origin))),
+        (origin.hasClass('online-prestige--folder') ? folderQuality(origin) : fallbackQuality(origin))),
       picture: origin.find('.online-prestige__img img, .online-prestige__folder img').first()
     };
   }
