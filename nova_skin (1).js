@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: додано жовтий акцент (#FFC107); видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовтий акцент (#FFC107); таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -1927,6 +1927,32 @@
     return (parseFloat(found[1]) || 1) < 0.9;
   }
 
+  // Фільм: таймкод у Lampa один на всі релізи (озвучки), тому показуємо його
+  // лише на тому релізі, який користувач запускав останнім.
+  var OWN_KEY = 'nova_skin_own_release';
+
+  function releaseId(item) {
+    return String(item.title || '') + '|' + (item.meta || []).join('|');
+  }
+
+  function ownedPercent(item, percent) {
+    if (!percent || serial || !item || !item.hash || item.folder) return percent;
+    var map = get(OWN_KEY, {});
+    var mine = map && typeof map === 'object' ? map[item.hash] : null;
+    if (!mine) return percent;
+    return mine === releaseId(item) ? percent : 0;
+  }
+
+  function rememberRelease(item) {
+    if (serial || !item || !item.hash || item.folder) return;
+    var map = get(OWN_KEY, {});
+    if (!map || typeof map !== 'object') map = {};
+    var keys = Object.keys(map);
+    if (keys.length > 200) delete map[keys[0]];
+    map[item.hash] = releaseId(item);
+    try { Lampa.Storage.set(OWN_KEY, map); } catch (e) {}
+  }
+
   function readCard(node, index) {
     var origin = $(node);
     var line = origin.find('.time-line').first();
@@ -1942,6 +1968,7 @@
     }
 
     var meta = [];
+    var _p0 = percent;
     origin.find('.online-prestige__info').children().each(function () {
       var part = $(this);
       if (part.hasClass('online-prestige-split')) return;
@@ -1955,6 +1982,11 @@
 
     var soon = soonCard(origin);
 
+    var probe = { hash: hash, title: origin.find('.online-prestige__title').text().trim(), meta: meta, folder: origin.hasClass('online-prestige--folder') };
+    percent = ownedPercent(probe, _p0);
+    var foreign = _p0 > 0 && percent === 0;
+    if (foreign) line = $();
+
     return {
       origin: origin,
       index: index,
@@ -1963,7 +1995,7 @@
       percent: percent,
       hash: hash,
       line: line,
-      viewed: origin.find('.online-prestige__viewed').length > 0,
+      viewed: !foreign && origin.find('.online-prestige__viewed').length > 0,
       num: digits(origin.find('.online-prestige__episode-number').text()) || index + 1,
       numbered: origin.find('.online-prestige__episode-number').length > 0,
       title: origin.find('.online-prestige__title').text().trim(),
@@ -2073,6 +2105,7 @@
 
   function play(item) {
     if (!item) return;
+    rememberRelease(item);
     try { item.origin.trigger('hover:enter'); } catch (e) {}
   }
 
@@ -4193,15 +4226,21 @@
         var raw = (item.line.children('div').first().attr('style') || '').match(/([\d.]+)%/);
         if (raw) percent = parseFloat(raw[1]) || 0;
       }
+      var rawPercent = percent;
+      percent = ownedPercent(item, rawPercent);
+      var foreign = rawPercent > 0 && percent === 0;
+      if (foreign) item.line = $();
       item.percent = percent;
-      if (item.origin && item.origin.find('.online-prestige__viewed').length) item.viewed = true;
+      if (foreign) item.viewed = false;
+      else if (item.origin && item.origin.find('.online-prestige__viewed').length) item.viewed = true;
 
       var card = item.card;
       if (!card || !card.length) return;
 
       var box = card.find('.nova-card__line');
-      if (box.length && item.line && item.line.length) {
-        box.empty().append(item.line.clone());
+      if (box.length) {
+        box.empty();
+        if (item.line && item.line.length) box.append(item.line.clone());
       }
 
       if (isSeen(item)) {
