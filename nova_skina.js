@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран без темної смуги; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -2834,7 +2834,40 @@
     ui.hero.find('.nova-hero__season').hide();
   }
 
+  // Піднімає постер шапки під верхню панель, прибираючи темну смугу над ним.
+  function liftHero() {
+    try {
+      if (!heroBleed() || !ui.hero || !ui.hero.length) return;
+      var node = ui.hero[0];
+      if (!node.getBoundingClientRect || !document.body.contains(node)) return;
+      if (ui.hero.hasClass('nova-hero--compact')) {
+        node.style.marginTop = '';
+        node.style.paddingTop = '';
+        node.setAttribute('data-nova-lift', '0');
+        return;
+      }
+      var was = parseFloat(node.getAttribute('data-nova-lift')) || 0;
+      var natural = node.getBoundingClientRect().top + was;
+      var lift = Math.max(0, Math.min(Math.round(natural), 400));
+      if (Math.abs(lift - was) < 2) return;
+      node.style.marginTop = '-' + lift + 'px';
+      node.style.paddingTop = lift + 'px';
+      node.setAttribute('data-nova-lift', String(lift));
+    } catch (e) {}
+  }
+
+  function liftHeroLater() {
+    setTimeout(liftHero, 60);
+    setTimeout(liftHero, 500);
+  }
+
   function buildHero() {
+    var out = buildHeroCore();
+    liftHeroLater();
+    return out;
+  }
+
+  function buildHeroCore() {
     if (!heroEnabled()) {
       ui.hero_box.empty();
       ui.hero = null;
@@ -4498,7 +4531,14 @@
           name: label('nova_skin_set_bleed'),
           description: label('nova_skin_set_bleed_descr')
         },
-        onChange: function () { applyHeroBleed(); }
+        onChange: function () {
+          applyHeroBleed();
+          try {
+            var h = ui.hero && ui.hero[0];
+            if (h && !heroBleed()) { h.style.marginTop = ''; h.style.paddingTop = ''; h.setAttribute('data-nova-lift', '0'); }
+            else liftHeroLater();
+          } catch (e) {}
+        }
       });
 
       Lampa.SettingsApi.addParam({
@@ -4639,6 +4679,7 @@
     applyFullScreen();
     applyEdgeFade();
     applyHeroBleed();
+    try { window.addEventListener('resize', liftHeroLater, false); } catch (e) {}
     handWatch();
     hookFilter();
     hookScroll();
