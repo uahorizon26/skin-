@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; мінімальна шапка і великі картки, постер на весь екран під списком, темне виділення карток; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; мінімальна шапка і великі картки, постер на весь екран під списком, темне виділення всіх карток; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -4937,9 +4937,10 @@
     'body.nova-skin-lean.nova-skin-bleed .nova-skin-root .nova-hero:not(.nova-hero--compact){min-height:0;margin-bottom:.2em}',
     'body.nova-skin-lean .nova-skin-root .nova-hero:not(.nova-hero--compact) .nova-hero__body{padding-top:2.4em;padding-bottom:.3em}',
     'body.nova-skin-backdrop .nova-skin-root .nova-card:not(.focus){background:rgba(12,12,18,.58)}',
-    'body .nova-skin-root .nova__list:not(.nova__list--grid) .nova-card.focus{background:rgba(4,4,8,.9)!important;color:#fff!important;-webkit-box-shadow:none!important;box-shadow:none!important;outline:none!important}',
-    'body .nova-skin-root .nova__list:not(.nova__list--grid) .nova-card.focus .nova-card__line--body{background:rgba(255,255,255,.2)!important}',
-    'body .nova-skin-root .nova__list:not(.nova__list--grid) .nova-card.focus .nova-card__line--body .time-line>div{background:#fff!important}',
+    'html body .nova-skin-root .nova-card.focus{background:rgba(4,4,8,.9)!important;color:#fff!important;-webkit-box-shadow:none!important;box-shadow:none!important;outline:none!important}',
+    'html body .nova-skin-root .nova-card.focus .nova-card__line--body{background:rgba(255,255,255,.2)!important}',
+    'html body .nova-skin-root .nova-card.focus .nova-card__line--body .time-line>div{background:#fff!important}',
+    'html body .nova-skin-root .nova__list--grid .nova-card.focus{background:none!important;color:inherit!important;-webkit-box-shadow:none!important;box-shadow:none!important}',
     '@media screen and (min-width:581px){',
     'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card{padding:.9em;margin-bottom:.9em;-webkit-border-radius:1.1em;border-radius:1.1em}',
     'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card:not(.nova-card--nav):not(.nova-card--file) .nova-card__thumb{width:15em;height:8.4em}',
