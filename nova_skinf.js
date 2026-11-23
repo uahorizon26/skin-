@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; мінімальна шапка і великі картки; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -122,6 +122,15 @@
 
   function heroBleed() { return get('nova_skin_hero_bleed', true) !== false; }
 
+  function leanHero() { return get('nova_skin_lean', true) !== false; }
+  function bigCards() { return get('nova_skin_big', true) !== false; }
+
+  function applyLayoutClasses() {
+    try {
+      $('body').toggleClass('nova-skin-lean', leanHero()).toggleClass('nova-skin-big', bigCards());
+    } catch (e) {}
+  }
+
   function applyHeroBleed() {
     try {
       var body = $('body');
@@ -206,6 +215,10 @@
     nova_skin_set_logo_descr: { ru: 'Показывать логотип фильма в шапке, если он есть', uk: 'Показувати логотип фільму в шапці, якщо він є', en: 'Show the movie logo in the header when available' },
     nova_skin_set_full: { ru: 'Во всю ширину экрана', uk: 'На всю ширину екрана', en: 'Full width' },
     nova_skin_set_full_descr: { ru: 'Скрыть маленький постер и описание слева', uk: 'Сховати маленький постер і опис ліворуч', en: 'Hide the small poster and overview on the left' },
+    nova_skin_set_lean: { ru: 'Минимальная шапка', uk: 'Мінімальна шапка', en: 'Minimal hero' },
+    nova_skin_set_lean_descr: { ru: 'Без описания, рейтинга, кнопки и источника в шапке', uk: 'Без опису, рейтингу, кнопки й джерела в шапці', en: 'No description, rating, button or source in the hero' },
+    nova_skin_set_big: { ru: 'Крупные карточки', uk: 'Великі картки', en: 'Large cards' },
+    nova_skin_set_big_descr: { ru: 'Больше превью и шрифт у раздач и серий', uk: 'Більше превʼю й шрифт у роздач і серій', en: 'Larger preview and font for releases and episodes' },
     nova_skin_set_bleed: { ru: 'Шапка на весь экран', uk: 'Шапка на весь екран', en: 'Full-width hero' },
     nova_skin_set_bleed_descr: { ru: 'Постер шапки во всю ширину экрана, без рамки-окна', uk: 'Постер шапки на всю ширину екрана, без рамки-вікна', en: 'Hero poster spans the full screen width, no framed window' },
     nova_skin_set_fade: { ru: 'Размытые края постера', uk: 'Розмиті краї постера', en: 'Faded poster edges' },
@@ -500,7 +513,7 @@
     if (document.getElementById('nova-skin-css')) return;
     var style = document.createElement('style');
     style.id = 'nova-skin-css';
-    style.textContent = SKIN_CSS + EXTRA_CSS + CARD_CSS + FOCUS_CSS + FULL_CSS + FADE_CSS + MARK_CSS + BADGE_CSS + LOGO_CSS + LOGO_HOLD + ACCENT_CSS + BLEED_CSS;
+    style.textContent = SKIN_CSS + EXTRA_CSS + CARD_CSS + FOCUS_CSS + FULL_CSS + FADE_CSS + MARK_CSS + BADGE_CSS + LOGO_CSS + LOGO_HOLD + ACCENT_CSS + BLEED_CSS + LAYOUT_CSS;
     (document.body || document.head).appendChild(style);
   }
 
@@ -2815,7 +2828,7 @@
       var badge = knownQuality(currentSourceKey()) || splitSourceName(sourceTitle()).badge;
       if (badge) meta.append('<div class="nova-badge">' + esc(badge) + '</div>');
       if (movie.vote_average) {
-        meta.append('<div>\u2605 ' + parseFloat(movie.vote_average + '').toFixed(1) + '</div>');
+        meta.append('<div class="nova-meta-rating">\u2605 ' + parseFloat(movie.vote_average + '').toFixed(1) + '</div>');
       }
       var year = ((movie.release_date || movie.first_air_date || '') + '').slice(0, 4);
       if (year) meta.append('<div>' + esc(year) + '</div>');
@@ -2994,7 +3007,7 @@
       var badge = shortQuality(target.quality) || splitSourceName(sourceTitle()).badge;
       if (badge) meta.append('<div class="nova-badge">' + esc(badge) + '</div>');
       if (movie.vote_average) {
-        meta.append('<div>\u2605 ' + parseFloat(movie.vote_average + '').toFixed(1) + '</div>');
+        meta.append('<div class="nova-meta-rating">\u2605 ' + parseFloat(movie.vote_average + '').toFixed(1) + '</div>');
       }
       var year = ((movie.release_date || movie.first_air_date || '') + '').slice(0, 4);
       if (year) meta.append('<div>' + esc(year) + '</div>');
@@ -4582,6 +4595,26 @@
 
       Lampa.SettingsApi.addParam({
         component: 'nova_skin',
+        param: { name: 'nova_skin_lean', type: 'trigger', default: true },
+        field: {
+          name: label('nova_skin_set_lean'),
+          description: label('nova_skin_set_lean_descr')
+        },
+        onChange: function () { applyLayoutClasses(); liftHeroLater(); }
+      });
+
+      Lampa.SettingsApi.addParam({
+        component: 'nova_skin',
+        param: { name: 'nova_skin_big', type: 'trigger', default: true },
+        field: {
+          name: label('nova_skin_set_big'),
+          description: label('nova_skin_set_big_descr')
+        },
+        onChange: function () { applyLayoutClasses(); }
+      });
+
+      Lampa.SettingsApi.addParam({
+        component: 'nova_skin',
         param: { name: 'nova_skin_hero_bleed', type: 'trigger', default: true },
         field: {
           name: label('nova_skin_set_bleed'),
@@ -4736,6 +4769,7 @@
     applyFullScreen();
     applyEdgeFade();
     applyHeroBleed();
+    applyLayoutClasses();
     try { window.addEventListener('resize', liftHeroLater, false); } catch (e) {}
     handWatch();
     hookFilter();
@@ -4896,6 +4930,23 @@
   var ACCENT = '#FFC107';
   var ACCENT_CSS = [
     '.nova-hero__progress .time-line>div,.nova-skin-root .nova-hero__progress .time-line>div,.nova-card__line .time-line>div,.nova-skin-root .nova-card__line>.time-line>div,.nova-skin-root .nova-card__line--body>.time-line>div,.nova-loading__bar>div{background:' + ACCENT + '}'
+  ].join('');
+
+  // Мінімальна шапка і великі картки (вимикаються в налаштуваннях)
+  var LAYOUT_CSS = [
+    'body.nova-skin-lean .nova-skin-root .nova-hero__descr,body.nova-skin-lean .nova-skin-root .nova-hero__hint,body.nova-skin-lean .nova-skin-root .nova-hero__actions .nova-btn,body.nova-skin-lean .nova-skin-root .nova-hero__meta .nova-meta-rating{display:none!important}',
+    'body.nova-skin-lean .nova-skin-root .nova-hero__actions{margin:0!important;padding:0!important;min-height:0!important}',
+    'body.nova-skin-lean.nova-skin-bleed .nova-skin-root .nova-hero:not(.nova-hero--compact){min-height:19em}',
+    '@media screen and (min-width:581px){',
+    'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card{padding:.9em;margin-bottom:.9em;-webkit-border-radius:1.1em;border-radius:1.1em}',
+    'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card:not(.nova-card--nav):not(.nova-card--file) .nova-card__thumb{width:15em;height:8.4em}',
+    'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card--file .nova-card__thumb{width:8em;height:8em}',
+    'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card__body{padding:0 1.6em}',
+    'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card:not(.nova-card--nav) .nova-card__title{font-size:1.7em;line-height:1.3;margin-bottom:.35em;-webkit-line-clamp:2}',
+    'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card:not(.nova-card--nav) .nova-card__meta{font-size:1.2em;-webkit-line-clamp:2}',
+    'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card:not(.nova-card--nav) .nova-card__side{font-size:1.3em}',
+    'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card--nav .nova-card__title{font-size:1.5em}',
+    '}'
   ].join('');
 
   // Шапка на всю ширину екрана (вимикається в налаштуваннях)
