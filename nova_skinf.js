@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; мінімальна шапка і великі картки, постер на весь екран під списком, темне виділення всіх карток; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; мінімальна шапка і великі картки, постер на весь екран під списком, виділення «Темна заливка» замість білої; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -108,7 +108,7 @@
   function viewMode() { return get('nova_skin_view', 'list'); }
   function preferredQuality() { return get('nova_skin_quality', 'auto'); }
 
-  function focusRing() { return get('nova_focus_style', 'ring') !== 'fill'; }
+  function focusRing() { return get('nova_focus_style', 'fill') === 'ring'; }
 
   function fullScreen() { return get('nova_skin_fullscreen', true) === true; }
 
@@ -236,7 +236,7 @@
     nova_skin_set_focus: { ru: 'Выделение', uk: 'Виділення', en: 'Highlight style' },
     nova_skin_set_focus_descr: { ru: 'Чем подсвечивать выбранную кнопку, серию или озвучку', uk: 'Чим підсвічувати вибрану кнопку, серію або озвучення', en: 'How the focused button, episode or voice is highlighted' },
     nova_skin_set_focus_ring: { ru: 'Ободок', uk: 'Обідок', en: 'Outline' },
-    nova_skin_set_focus_fill: { ru: 'Белая заливка', uk: 'Біла заливка', en: 'White fill' }
+    nova_skin_set_focus_fill: { ru: 'Тёмная заливка', uk: 'Темна заливка', en: 'Dark fill' }
   };
 
   try {
@@ -4519,6 +4519,12 @@
 
       Lampa.SettingsApi.addParam({
         component: 'nova_skin',
+        param: { name: 'nova_skin_build', type: 'static' },
+        field: { name: 'Збірка: 23.11 · темна заливка v4', description: 'Якщо тут інший напис, Lampa завантажила стару копію файлу' }
+      });
+
+      Lampa.SettingsApi.addParam({
+        component: 'nova_skin',
         param: { name: ENABLED_KEY, type: 'trigger', default: true },
         field: {
           name: label('nova_skin_set_enable'),
@@ -4733,7 +4739,7 @@
             ring: label('nova_skin_set_focus_ring'),
             fill: label('nova_skin_set_focus_fill')
           },
-          default: 'ring'
+          default: 'fill'
         },
         field: {
           name: label('nova_skin_set_focus'),
@@ -4937,10 +4943,12 @@
     'body.nova-skin-lean.nova-skin-bleed .nova-skin-root .nova-hero:not(.nova-hero--compact){min-height:0;margin-bottom:.2em}',
     'body.nova-skin-lean .nova-skin-root .nova-hero:not(.nova-hero--compact) .nova-hero__body{padding-top:2.4em;padding-bottom:.3em}',
     'body.nova-skin-backdrop .nova-skin-root .nova-card:not(.focus){background:rgba(12,12,18,.58)}',
-    'html body .nova-skin-root .nova-card.focus{background:rgba(4,4,8,.9)!important;color:#fff!important;-webkit-box-shadow:none!important;box-shadow:none!important;outline:none!important}',
-    'html body .nova-skin-root .nova-card.focus .nova-card__line--body{background:rgba(255,255,255,.2)!important}',
-    'html body .nova-skin-root .nova-card.focus .nova-card__line--body .time-line>div{background:#fff!important}',
-    'html body .nova-skin-root .nova__list--grid .nova-card.focus{background:none!important;color:inherit!important;-webkit-box-shadow:none!important;box-shadow:none!important}',
+    'html body:not(.nova-focus-ring) .nova-skin-root .nova-card.focus,html body:not(.nova-focus-ring) .nova-skin-root .nova-btn.focus,html body:not(.nova-focus-ring) .nova-skin-root .nova-chip.focus,html body:not(.nova-focus-ring) .nova-skin-root .nova-group.focus{background:rgba(4,4,8,.9)!important;color:#fff!important;-webkit-box-shadow:none!important;box-shadow:none!important;outline:none!important}',
+    'html body:not(.nova-focus-ring) .nova-skin-root .nova-chip.focus .nova-chip__badge{background:rgba(255,255,255,.18)!important;color:#fff!important}',
+    'html body:not(.nova-focus-ring) .nova-skin-root .nova-card.focus .nova-card__line--body,html body:not(.nova-focus-ring) .nova-skin-root .nova-card--slim.focus .nova-card__line{background:rgba(255,255,255,.2)!important}',
+    'html body:not(.nova-focus-ring) .nova-skin-root .nova-card.focus .nova-card__line--body .time-line>div,html body:not(.nova-focus-ring) .nova-skin-root .nova-card--slim.focus .nova-card__line .time-line>div{background:#fff!important}',
+    'html body:not(.nova-focus-ring) .nova-skin-root .nova__list--grid .nova-card.focus{background:none!important;color:inherit!important}',
+    'html body:not(.nova-focus-ring) .nova-skin-root .nova__list--grid .nova-card.focus .nova-card__thumb{-webkit-box-shadow:0 0 0 .15em #fff;box-shadow:0 0 0 .15em #fff}',
     '@media screen and (min-width:581px){',
     'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card{padding:.9em;margin-bottom:.9em;-webkit-border-radius:1.1em;border-radius:1.1em}',
     'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card:not(.nova-card--nav):not(.nova-card--file) .nova-card__thumb{width:15em;height:8.4em}',
