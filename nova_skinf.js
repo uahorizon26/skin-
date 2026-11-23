@@ -1,7 +1,7 @@
 /*!
  * Nova Skin (clean build)
  * Оригінальний автор: amikdn (https://amikdn.github.io/nova_skin.js)
- * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; мінімальна шапка і великі картки; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
+ * Зміни: жовті шкали прогресу (#FFC107); шапка на весь екран, постер під верхню панель; мінімальна шапка і великі картки, постер на весь екран під списком; джерела за якістю; виправлено визначення SD/4K; таймкод фільму лише на запущеному релізі; видалено прихований код в кінці файла - (new Function(atob(...)))(),
  * який підміняв постери. Більше змін у логіці немає.
  * Перевірено: немає atob / new Function / eval, зовнішні запити лише до image.tmdb.org.
  * Підключення в Lampa: https://<твій-логін>.github.io/<репозиторій>/nova_skin.js
@@ -2867,7 +2867,7 @@
       var src = ui.hero.find('.nova-hero__bg img').attr('src') || '';
       if (!src) return;
       var bottom = Math.round(ui.hero[0].getBoundingClientRect().bottom);
-      if (bottom < 200) return;
+      if (bottom < 40) return;
       if (!backdrop) {
         // Шар стає прямо за фоном Lampa і з тим самим z-index: так він завжди
         // лежить над фоном і під інтерфейсом, що б там не було.
@@ -2878,11 +2878,9 @@
         backdrop.css('z-index', layer === 'auto' || layer === '' ? 'auto' : layer);
         anchor.after(backdrop);
       }
-      var height = Math.max(bottom, parseFloat(backdrop.attr('data-h')) || 0);
-      backdrop.attr('data-h', height);
       backdrop.css({
-        height: height + 'px',
-        'background-image': 'linear-gradient(180deg,rgba(10,11,17,.5) 0%,rgba(10,11,17,0) 22%,rgba(10,11,17,.35) 62%,rgba(10,11,17,.92) 100%),url("' + src.replace(/"/g, '%22') + '")'
+        height: '100vh',
+        'background-image': 'linear-gradient(180deg,rgba(10,11,17,.5) 0%,rgba(10,11,17,0) 20%,rgba(10,11,17,.22) 50%,rgba(10,11,17,.82) 100%),url("' + src.replace(/"/g, '%22') + '")'
       });
       $('body').addClass('nova-skin-backdrop');
       if (!backdrop_timer) {
@@ -4936,7 +4934,9 @@
   var LAYOUT_CSS = [
     'body.nova-skin-lean .nova-skin-root .nova-hero__descr,body.nova-skin-lean .nova-skin-root .nova-hero__hint,body.nova-skin-lean .nova-skin-root .nova-hero__actions .nova-btn,body.nova-skin-lean .nova-skin-root .nova-hero__meta .nova-meta-rating{display:none!important}',
     'body.nova-skin-lean .nova-skin-root .nova-hero__actions{margin:0!important;padding:0!important;min-height:0!important}',
-    'body.nova-skin-lean.nova-skin-bleed .nova-skin-root .nova-hero:not(.nova-hero--compact){min-height:19em}',
+    'body.nova-skin-lean.nova-skin-bleed .nova-skin-root .nova-hero:not(.nova-hero--compact){min-height:0;margin-bottom:.2em}',
+    'body.nova-skin-lean .nova-skin-root .nova-hero:not(.nova-hero--compact) .nova-hero__body{padding-top:2.4em;padding-bottom:.3em}',
+    'body.nova-skin-backdrop .nova-skin-root .nova-card:not(.focus){background:rgba(12,12,18,.58)}',
     '@media screen and (min-width:581px){',
     'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card{padding:.9em;margin-bottom:.9em;-webkit-border-radius:1.1em;border-radius:1.1em}',
     'body.nova-skin-big .nova__list:not(.nova__list--grid) .nova-card:not(.nova-card--nav):not(.nova-card--file) .nova-card__thumb{width:15em;height:8.4em}',
@@ -4956,7 +4956,7 @@
     'body.nova-skin-bleed .nova-skin-root .nova-hero__bg,body.nova-skin-bleed .nova-skin-root .nova-hero__shade{-webkit-mask-image:-webkit-linear-gradient(top,transparent 0,#000 16%,#000 72%,transparent 100%);mask-image:linear-gradient(180deg,transparent 0,#000 16%,#000 72%,transparent 100%)}',
     'body.nova-skin-bleed .nova-skin-root .nova-hero__progress{left:calc(50vw - 50%);right:calc(50vw - 50%);bottom:.6em;width:auto;-webkit-border-radius:.3em;border-radius:.3em}',
     'body.nova-skin-bleed .nova-skin-root .nova-hero__body{padding-left:0;padding-right:0}',
-    '.nova-backdrop{position:fixed;top:0;left:0;width:100%;pointer-events:none;background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat;-webkit-mask-image:-webkit-linear-gradient(top,#000 0,#000 80%,transparent 100%);mask-image:linear-gradient(180deg,#000 0,#000 80%,transparent 100%)}',
+    '.nova-backdrop{position:fixed;top:0;left:0;width:100%;pointer-events:none;background-size:cover,cover;background-position:center top,center top;background-repeat:no-repeat;}',
     'body.nova-skin-backdrop.nova-skin-bleed .nova-skin-root .nova-hero__bg,body.nova-skin-backdrop.nova-skin-bleed .nova-skin-root .nova-hero__shade{opacity:0}'
   ].join('');
 
